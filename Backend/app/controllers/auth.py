@@ -1,10 +1,10 @@
 from fastapi import status, Request, Depends, HTTPException, Response
 from sqlalchemy.orm import Session
-from ..schema.user import CreateUser, LoginUser
+from ..schema.user import CreateUser, LoginUserSchema
 from ..db.session import get_db
 from ..models.user import User
 from ..utils.tokens import genrate_token, TokenPayload
-from ..utils.hash import hash_password
+from ..utils.hash import hash_password, verify_password
 from ..schema.resp import LoginResp
 from ..utils.tokens import decrypt_token
 import os
@@ -17,7 +17,7 @@ ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
 
 
-def register_user( req: Request, resp: Response, payload: CreateUser, db: Session = Depends(get_db)):
+async def register_user( req: Request, resp: Response, payload: CreateUser, db: Session = Depends(get_db)):
     
     """
         1. VALIDATE DATA 👍👍👍👍👍
@@ -94,34 +94,23 @@ def register_user( req: Request, resp: Response, payload: CreateUser, db: Sessio
         })
     
 async def logout(req: Request, resp: Response, db: Session = Depends(get_db)):
-    print('entered Logout')
     try:
-        is_logged_in = req.state.is_authenticted
+        auth_user = req.state.user
 
-        if not is_logged_in:
+        if not auth_user:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail={
-                'message': 'Unautharized access'
+                'message': 'Unautharized Access'
             })
-        
-        access_token = req.cookies.get("ACCESS_TOKEN")
 
-        if not access_token:
-            raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail={
-                'message': 'Token not found'
-            })
-        
-        decoded_data = decrypt_token(token=access_token, secret_key=ACCESS_TOKEN_SECRET)
-    
-        if not decoded_data:
-            req.state.is_authenticted = False
-            return req.state.is_authenticted
-
-        user = db.query(User).filter(User.id == decoded_data.id).first()
+        user = db.query(User).filter(User.id == auth_user.id).first()
 
         user.access_token = ""
         user.refresh_token = ""
 
         db.commit()
+
+        resp.delete_cookie("ACCESS_TOKEN")
+        resp.delete_cookie("REFRESH_TOKEN")
 
         return {
             'message': 'User Logged Out'
@@ -134,28 +123,25 @@ async def logout(req: Request, resp: Response, db: Session = Depends(get_db)):
                 'message': 'Unautharized access'
             })
 
+async def check_already(req: Request, resp: Response, db:Session = Depends(get_db), ):
+    auth_user = req.state.user
 
-def check_already(req: Request, resp: Response, db:Session = Depends(get_db)):
-    
-    if req.state.is_authenticted:
+    if not auth_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={
                 'message': 'Unautharized Acccess'
-            }
-        )
-    
-    user = req.state.user
+            })
 
-    access_token = genrate_token(TokenPayload(id=user.id, email=user.mail), ACCESS_TOKEN_SECRET)
-    refresh_token = genrate_token(TokenPayload(id=user.id, email=user.mail), REFRESH_TOKEN_SECRET)
+    access_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.mail), ACCESS_TOKEN_SECRET)
+    refresh_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.mail), REFRESH_TOKEN_SECRET)
 
     if not refresh_token or not access_token:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,  detail={
                 'message': 'Token not found'
             })
 
-    user = db.query(User).filter(User.id == user.id).first()
+    user = db.query(User).filter(User.id == auth_user.id).first()
 
     if not user:
         raise HTTPException(
@@ -178,8 +164,7 @@ def check_already(req: Request, resp: Response, db:Session = Depends(get_db)):
         email= user.mail
     )
 
-
-def login(resp: Response, payload: LoginUser, db:Session = Depends(get_db)):
+async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(get_db)):
     if not payload.email or not payload.password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -195,6 +180,11 @@ def login(resp: Response, payload: LoginUser, db:Session = Depends(get_db)):
                 'message': 'User not found'
             })
     
+    if not verify_password(payload.password, user.password):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,  detail={
+                    'message': 'Incorrect Password'
+                })
+
     try:
         access_token = genrate_token(TokenPayload(id=user.id, email=user.mail), ACCESS_TOKEN_SECRET)
         refresh_token = genrate_token(TokenPayload(id=user.id, email=user.mail), REFRESH_TOKEN_SECRET)
@@ -208,10 +198,10 @@ def login(resp: Response, payload: LoginUser, db:Session = Depends(get_db)):
         user.refresh_token = refresh_token
         db.commit()
 
-        resp.set_cookie('REFRESH_TOKEN', access_token)
-        resp.set_cookie('ACCESS_TOKEN', refresh_token)
+        resp.set_cookie('ACCESS_TOKEN', access_token)
+        resp.set_cookie('REFRESH_TOKEN', refresh_token)
     except Exception as e:
-        print('error: {e}')
+        print(f'error: {e}')
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -219,10 +209,10 @@ def login(resp: Response, payload: LoginUser, db:Session = Depends(get_db)):
                 'message': 'Database Error'
             })
     
-
     return LoginResp(
         message="Login Success 👍",
         id=user.id,
         name = user.name,
         email= user.mail
     )
+
