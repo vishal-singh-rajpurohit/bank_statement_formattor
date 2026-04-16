@@ -7,6 +7,8 @@ load_dotenv()
 
 DB_URI = os.getenv('PGQL_URL')
 
+# print('PGQL_URL: ', DB_URI)
+
 engine = create_engine(DB_URI)
 
 LocalSession = sessionmaker(
@@ -16,3 +18,10 @@ LocalSession = sessionmaker(
 )
 
 Base = declarative_base()
+
+def get_db():
+    db = LocalSession()
+    try:
+        yield db
+    finally:
+        db.close()
