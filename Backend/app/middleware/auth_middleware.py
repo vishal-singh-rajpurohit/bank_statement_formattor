@@ -21,14 +21,11 @@ async def is_loggedin(req: Request, db: Session = Depends(get_db)):
 
     decoded_data = decrypt_token(token=access_token, secret_key=ACCESS_TOKEN_SECRET)
 
-
     user = db.query(User).filter(User.id == decoded_data['id']).first()
-
 
     if not user:
         req.state.user = None
         return req.state.user
-    
-    print('Decoded Data: ', user.id)
+
     req.state.user = user
     return req.state.user

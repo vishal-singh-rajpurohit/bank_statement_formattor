@@ -15,8 +15,9 @@ class Operation(Base):
         nullable=False
     )
 
-    file_name = Column(String(100), nullable=False)
-    bank = Column(String(100), nullable=False)
+    file_name = Column(String(100), nullable=False, server_default="")
+    temp_name = Column(String(100), nullable=False, server_default="")
+    bank = Column(String(100), nullable=False, server_default="")
 
     pdf = Column(String(100), server_default="")
     xlsx = Column(String(100), server_default="")

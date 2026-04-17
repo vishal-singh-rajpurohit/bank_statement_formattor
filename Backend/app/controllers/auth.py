@@ -76,8 +76,8 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         user.refresh_token = refresh_token
         db.commit()
 
-        resp.set_cookie('REFRESH_TOKEN', access_token)
-        resp.set_cookie('ACCESS_TOKEN', refresh_token)
+        resp.set_cookie('ACCESS_TOKEN', access_token)
+        resp.set_cookie('REFRESH_TOKEN', refresh_token)
 
         return LoginResp(
             message="Login Success 👍",

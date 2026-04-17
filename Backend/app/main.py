@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 from .db.session import Base, engine
 from .routers.auth import auth_router
+from .routers.actions import actions_router
 from .models.operations import Operation
 from app.models.user import User
 import os
@@ -23,6 +24,7 @@ app.add_middleware(
 Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router, prefix='/api/v1', tags=["Auth"])
+app.include_router(actions_router, prefix='/api/v1', tags=["Actions"])
 
 @app.get('/')
 def root():
