@@ -6,6 +6,7 @@ from .routers.auth import auth_router
 from .routers.actions import actions_router
 from .models.operations import Operation
 from app.models.user import User
+from .models.otps import Otps
 import os
 
 load_dotenv()

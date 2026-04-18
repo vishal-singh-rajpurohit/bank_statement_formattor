@@ -177,5 +177,5 @@ def convert_excel_to_tally_xml(file_path, party_ledger_name, output_file="output
 
 def wrapper_convertor(file_name: str, excel_path: str, party_ledger_name: str):
     frame = au_processor(file_name)
-    xlsx_apath = convert_to_xlsx(frame,excel_path, 'sheet1')
+    xlsx_apath = convert_to_xlsx(frame, excel_path, 'sheet1')
     convert_excel_to_tally_xml(xlsx_apath, party_ledger_name, output_file=f'{party_ledger_name}.xml')

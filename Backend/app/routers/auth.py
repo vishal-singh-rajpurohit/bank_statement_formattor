@@ -7,8 +7,8 @@ from typing import Annotated
 from ..utils.tokens import genrate_token, TokenPayload
 from ..utils.hash import hash_password
 from ..schema.resp import LoginResp
-
-from ..controllers.auth import register_user, login, logout, check_already
+from ..schema.req import VerificationMode
+from ..controllers.auth import register_user, login, logout, check_already, verify_account
 from ..middleware.auth_middleware import is_loggedin
 
 import os
@@ -40,3 +40,6 @@ async def root(req: Request, resp: Response, db: Session = Depends(get_db)):
 async def root(resp: Response, payload: LoginUserSchema, db: Session = Depends(get_db)):
     return await login(resp, payload, db)
 
+@auth_router.post('/verify-account', status_code=status.HTTP_200_OK, dependencies=[Depends(is_loggedin)])
+async def root(req: Request, resp: Response, payload: VerificationMode, db: Session = Depends(get_db)):
+    return await verify_account(req, resp, payload, db)

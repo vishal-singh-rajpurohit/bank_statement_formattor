@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, Request, Response, status
 from sqlalchemy.orm import Session
 from ..middleware.auth_middleware import is_loggedin
 from ..controllers.actions import upload_pdf, initiate_action, complete_action
-from ..schema.req import ActionPayload
+from ..schema.req import ActionPayload, VerificationMode
 from ..db.session import get_db
 
 
@@ -19,3 +19,4 @@ async def root(req: Request, resp: Response, payload: ActionPayload, db: Session
 @actions_router.get('/', status_code=status.HTTP_200_OK)
 async def root(req: Request, resp: Response, db: Session = Depends(get_db)):
     return await complete_action(req, resp, db)
+

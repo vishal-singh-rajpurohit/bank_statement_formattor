@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from ..db.session import Base
@@ -12,6 +12,8 @@ class User(Base):
     mail = Column(String(60), nullable=False, unique=True, index=True)
     password = Column(String(200), nullable=False)
 
+    is_verified = Column(Boolean, nullable=False, default=False)
+
     refresh_token = Column(String(200), nullable=True, default=" ")
     access_token = Column(String(200), nullable=True, default=" ")
 
@@ -23,5 +25,11 @@ class User(Base):
     "Operation",
     back_populates="user",
     cascade="all, delete-orphan"
+    )
+
+    otps = relationship(   # 👈 ADD THIS
+        "Otps",
+        back_populates="user",
+        cascade="all, delete-orphan"
     )
 

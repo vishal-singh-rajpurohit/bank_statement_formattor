@@ -136,7 +136,6 @@ def format_date(date_str):
     # Input: 10-06-2024 → Output: 20240610
     return datetime.strptime(date_str, "%d-%m-%Y").strftime("%Y%m%d")
 
-
 def parse_amount(amount_str):
     # Example: "120.00(Dr)" or "15,000.00(Cr)"
     amount_str = amount_str.replace(",", "")
@@ -146,7 +145,6 @@ def parse_amount(amount_str):
     elif "(Cr)" in amount_str:
         return float(amount_str.replace("(Cr)", "").strip())
     return 0
-
 
 def create_tally_xml(df: pd.DataFrame, party_ledger_name: str, output_file="output.xml"):
     
@@ -214,12 +212,12 @@ def katak_mahindra_formattor(path: str, ledger_name: str, output_path: str):
 
     df = process_pdf(path)
 
-    df = df[df["Date"] != "Date"] 
+    df = df[df["Date"] != "Date"]
 
     df = df.dropna(subset=["Date"])
 
     create_tally_xml(
         df,
-        party_ledger_name="KOTAK BANK ACCOUNT-3812618555",
-        output_file="kotak-tally.xml"
+        party_ledger_name=ledger_name,
+        output_file=output_path
     )

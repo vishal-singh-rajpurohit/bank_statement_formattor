@@ -1,4 +1,5 @@
 from fastapi import HTTPException, Depends, status, Request, Response, UploadFile
+from pypdf import PdfReader, PdfWriter
 from  sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from pathlib import Path
@@ -7,9 +8,13 @@ import os
 
 from ..schema.req import ActionPayload
 from ..models.operations import Operation
+from ..models.user import User
 from ..db.session import get_db
 from ..utils.tokens import genrate_session_token, SessionPayload, decrypt_token
 from ..utils.formattors.au_bank import wrapper_convertor
+from ..utils.formattors.kotak import katak_mahindra_formattor
+from ..utils.decrypter import decrpt_pdf
+from ..utils.mail.mail import send_mail
 
 # from ..utils.formattors.au_bank import 
 
@@ -97,6 +102,7 @@ async def initiate_action(req: Request, resp: Response, payload: ActionPayload, 
                 'message': 'Unautharized Access'
             })
     
+    
     session_token = req.cookies.get("SESSION_TOKEN")
 
     if not session_token:
@@ -130,6 +136,12 @@ async def initiate_action(req: Request, resp: Response, payload: ActionPayload, 
             detail={
                 'message': 'All Data Required'
             })
+    
+    reader = PdfReader(f'{UPLOAD_DIR}/{document.temp_name}')
+    
+    if reader.is_encrypted:
+        decrpt_pdf(f'{UPLOAD_DIR}/{document.temp_name}', payload.password)
+        
     
     try:
         document.file_name = payload.voucher_name
@@ -193,7 +205,7 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
 
     file_path = f"uploads/{document.temp_name}"
     xlsx_path = f'{OUTPUT_DIR}/id-{document.id}.xlsx'
-    xml_path = f'{OUTPUT_DIR}/{document.file_name}'
+    xml_path = f'{OUTPUT_DIR}/{document.file_name}.xml'
 
     if document.bank == "AU": 
         wrapper_convertor(
@@ -201,10 +213,25 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
             excel_path= xlsx_path,
             party_ledger_name=document.file_name
         )
+
     elif document.bank == "KOTAK":
-        pass
+        katak_mahindra_formattor(
+            path = f'{file_path}',
+            ledger_name=f'{document.file_name}',
+            output_path= f'{xml_path}'
+        )
      
     else:
+        mail_result = await send_mail(
+            is_success=False,
+            to= db_user.mail,
+            sub="Your File is Ready sir",
+            username= db_user.name,
+            bank_name=document.bank,
+            xml=document.xml_tally,
+            excel=document.xlsx
+        )
+        
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
@@ -213,6 +240,21 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
     
     # Upload files to cloud
     # Send the response to the mail
+
+    db_user = db.query(User).filter(User.id == user.id).first()
+
+    mail_result = await send_mail(
+        is_success=True,
+        to= "gamingwood18@gmail.com",
+        sub="Your File is Ready sir",
+        username= db_user.name,
+        bank_name=document.bank,
+        xml_path=f'{xml_path}',
+        file_name=document.file_name
+        # excel_path=f'{xlsx_path}'
+    )
+
+    print('mail result: ', mail_result)
 
     return {
         'message': 'The Response sent to the Mail'
