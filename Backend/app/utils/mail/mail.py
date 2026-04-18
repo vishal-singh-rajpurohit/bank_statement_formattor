@@ -18,7 +18,7 @@ def encode_file(file_path: str):
     with open(file_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-async def send_mail(is_success: bool, to:str, sub: str, username: str, bank_name: str, xml_path: str, file_name: str, otp: str = "00000", token: str = 'no') -> Dict:
+async def send_mail(to:str, sub: str, username: str, bank_name: str, xml_path: str, file_name: str) -> Dict:
 
     xml_file = encode_file(xml_path)
 
@@ -26,7 +26,7 @@ async def send_mail(is_success: bool, to:str, sub: str, username: str, bank_name
         "from": "onboarding@resend.dev",
         "to": [f'{to}'],
         "subject": f'{sub}',
-        "html":  success_template(username, bank_name, file_name) if is_success else fail_template(file_name, bank_name),
+        "html":  success_template(username, bank_name, file_name) ,
         "attachments": [
             {
                 "filename": f"{file_name}.xml",
@@ -34,6 +34,21 @@ async def send_mail(is_success: bool, to:str, sub: str, username: str, bank_name
             },
         ]
     }
+    email: resend.Email = resend.Emails.send(params)
+
+    return email
+
+
+async def send_mail_error(to:str, sub: str, bank_name: str,  file_name: str) -> Dict:
+
+
+    params: resend.Emails.SendParams = {
+        "from": "onboarding@resend.dev",
+        "to": [f'{to}'],
+        "subject": f'{sub}',
+        "html":  fail_template(file_name, bank_name),
+    }
+
     email: resend.Email = resend.Emails.send(params)
 
     return email

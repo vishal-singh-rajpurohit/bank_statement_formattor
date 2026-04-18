@@ -1,11 +1,8 @@
-from fastapi import APIRouter, status, Request, Depends, HTTPException, Response
+from fastapi import APIRouter, status, Request, Depends, Response
 from sqlalchemy.orm import Session
 from ..schema.user import CreateUser, LoginUserSchema
 from ..db.session import get_db
-from ..models.user import User
 from typing import Annotated
-from ..utils.tokens import genrate_token, TokenPayload
-from ..utils.hash import hash_password
 from ..schema.resp import LoginResp
 from ..schema.req import VerificationMode
 from ..controllers.auth import register_user, login, logout, check_already, verify_account

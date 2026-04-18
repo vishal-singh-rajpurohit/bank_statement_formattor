@@ -14,7 +14,7 @@ from ..utils.tokens import genrate_session_token, SessionPayload, decrypt_token
 from ..utils.formattors.au_bank import wrapper_convertor
 from ..utils.formattors.kotak import katak_mahindra_formattor
 from ..utils.decrypter import decrpt_pdf
-from ..utils.mail.mail import send_mail
+from ..utils.mail.mail import send_mail, send_mail_error
 
 # from ..utils.formattors.au_bank import 
 
@@ -222,14 +222,13 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
         )
      
     else:
-        mail_result = await send_mail(
-            is_success=False,
-            to= db_user.mail,
-            sub="Your File is Ready sir",
-            username= db_user.name,
+        db_user = db.query(User).filter(User.id == user.id).first()
+        
+        mail_result = await send_mail_error(
+            to=db_user.mail,
+            sub='We are Facing Some Proble While Processing Your Statement',
             bank_name=document.bank,
-            xml=document.xml_tally,
-            excel=document.xlsx
+            xml_path=document.file_name
         )
         
         raise HTTPException(
@@ -244,14 +243,12 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
     db_user = db.query(User).filter(User.id == user.id).first()
 
     mail_result = await send_mail(
-        is_success=True,
-        to= "gamingwood18@gmail.com",
+        to= db_user.mail,
         sub="Your File is Ready sir",
         username= db_user.name,
         bank_name=document.bank,
         xml_path=f'{xml_path}',
         file_name=document.file_name
-        # excel_path=f'{xlsx_path}'
     )
 
     print('mail result: ', mail_result)

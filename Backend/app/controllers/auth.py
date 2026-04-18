@@ -321,3 +321,4 @@ async def verify_account(req: Request, resp: Response, payload: VerificationMode
         name = user.name,
         email= user.mail
     )
+
