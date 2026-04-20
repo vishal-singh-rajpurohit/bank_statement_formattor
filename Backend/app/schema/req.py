@@ -12,3 +12,7 @@ class VerificationMode(BaseModel):
 class ContactPayload(BaseModel):
     message: str
     mobile: str
+
+class PayOrderPayload(BaseModel):
+    ammount: float
+    
