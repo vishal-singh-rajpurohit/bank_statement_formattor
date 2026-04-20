@@ -1,5 +1,3 @@
-
-
 def success_template(username: str, bank_name: str, file_name: str) -> str:
     return f"""
         <!DOCTYPE html>
@@ -253,7 +251,6 @@ def fail_template(file_name: str, bank_name: str) -> str:
         </html>
     """
 
-
 def otp_template(otp: str) -> str:
     return f"""
         <!DOCTYPE html>
@@ -354,3 +351,111 @@ def otp_template(otp: str) -> str:
         </body>
         </html>
         """
+
+def message_recived_template(user:str, email: str, mobile: str, message: str) ->str:
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>New Contact Query Received</title>
+    </head>
+    <body style="margin:0; padding:0; background-color:#f4f7fb; font-family:Arial, Helvetica, sans-serif; color:#1f2937;">
+    <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f7fb; padding:30px 0;">
+        <tr>
+        <td align="center">
+
+            <table width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:600px; background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 8px 30px rgba(0,0,0,0.08);">
+
+            <!-- Header -->
+            <tr>
+                <td style="background:linear-gradient(135deg, #0f4c81, #1d6fdc); padding:24px; text-align:center;">
+                <img src="https://res.cloudinary.com/ddiaarexp/image/upload/v1776494288/only-logo-p_x3cerc.png"
+                    alt="Bank2XML Logo"
+                    width="60"
+                    style="display:block; margin:0 auto 10px;" />
+                <h1 style="margin:0; color:#ffffff; font-size:22px;">
+                    Bank2XML
+                </h1>
+                <p style="margin:6px 0 0; color:#dbeafe; font-size:13px;">
+                    New Contact Query Notification
+                </p>
+                </td>
+            </tr>
+
+            <!-- Body -->
+            <tr>
+                <td style="padding:30px;">
+
+                <h2 style="margin:0 0 12px; font-size:22px; color:#111827;">
+                    New Contact Query Received
+                </h2>
+
+                <p style="margin:0 0 20px; font-size:15px; color:#4b5563; line-height:1.6;">
+                    A user has submitted a new contact request. Here are the details:
+                </p>
+
+                <!-- User Info -->
+                <table width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f9fafb; border:1px solid #e5e7eb; border-radius:12px; margin-bottom:20px;">
+                    <tr>
+                    <td style="padding:18px;">
+                        <p style="margin:0 0 10px; font-size:14px;">
+                        <strong>Name:</strong> {user}
+                        </p>
+                        <p style="margin:0 0 10px; font-size:14px;">
+                        <strong>Email:</strong> {email}
+                        </p>
+                        <p style="margin:0; font-size:14px;">
+                        <strong>Mobile:</strong> {mobile}
+                        </p>
+                    </td>
+                    </tr>
+                </table>
+
+                <!-- Message -->
+                <table width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #e5e7eb; border-radius:12px; margin-bottom:24px;">
+                    <tr>
+                    <td style="padding:18px;">
+                        <p style="margin:0 0 8px; font-size:14px; font-weight:700; color:#111827;">
+                        Message
+                        </p>
+                        <p style="margin:0; font-size:14px; color:#374151; line-height:1.7; white-space:pre-line;">
+                        {message}
+                        </p>
+                    </td>
+                    </tr>
+                </table>
+
+                <!-- Action Button -->
+                <table align="center" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:20px;">
+                    <tr>
+                    <td align="center" style="background:#1d6fdc; border-radius:8px;">
+                        <a href="mailto:{email}"
+                        style="display:inline-block; padding:12px 24px; font-size:14px; font-weight:700; color:#ffffff; text-decoration:none;">
+                        Reply to User
+                        </a>
+                    </td>
+                    </tr>
+                </table>
+
+                </td>
+            </tr>
+
+            <!-- Footer -->
+            <tr>
+                <td style="padding:20px; text-align:center; border-top:1px solid #e5e7eb;">
+                <p style="margin:0; font-size:12px; color:#9ca3af;">
+                    This is an automated notification from Bank2XML system.
+                </p>
+                </td>
+            </tr>
+
+            </table>
+
+        </td>
+        </tr>
+    </table>
+    </body>
+    </html>
+    """

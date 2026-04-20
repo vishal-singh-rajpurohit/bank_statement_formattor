@@ -8,3 +8,7 @@ class ActionPayload(BaseModel):
 
 class VerificationMode(BaseModel):
     otp: str
+
+class ContactPayload(BaseModel):
+    message: str
+    mobile: str

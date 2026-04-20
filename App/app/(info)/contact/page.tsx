@@ -1,12 +1,17 @@
 'use client'
 import React from "react";
-import {  Phone, MessageSquare } from "lucide-react";
-import { FaSquareInstagram} from "react-icons/fa6";
+import { Phone, MessageSquare } from "lucide-react";
+import { FaSquareInstagram } from "react-icons/fa6";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
+import { toggleToastOpen } from "@/store/functions/ui";
+import api from "@/config/api_axios";
+import { useAppDispatch } from "@/store/Hooks";
 
 
 export default function ContactPage() {
-  
+
+  const disp = useAppDispatch()
+
   const [formData, setFormData] = React.useState({
     mobile: "",
     message: "",
@@ -17,9 +22,39 @@ export default function ContactPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(formData);
+    try {
+      await api.post('/contact/message', {
+        message: formData.message,
+        mobile: formData.mobile
+      }, {
+        withCredentials: true
+      })
+
+      disp(toggleToastOpen({
+        data: {
+          toastMessage: 'We Will Contact You Soon',
+          toastOpen: true,
+          toastType: "success"
+        }
+      }))
+
+      setFormData({
+        mobile: "",
+        message: "",
+      })
+
+
+    } catch (e) {
+      disp(toggleToastOpen({
+        data: {
+          toastMessage: 'Unable to Submit',
+          toastOpen: true,
+          toastType: "error"
+        }
+      }))
+    }
   };
 
   return (

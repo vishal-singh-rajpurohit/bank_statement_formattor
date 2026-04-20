@@ -1,6 +1,7 @@
 "use client"
 import api from "@/config/api_axios";
 import { enterApp } from "@/store/functions/auth";
+import { toggleToastOpen } from "@/store/functions/ui";
 import { useAppDispatch } from "@/store/Hooks";
 import { Api_Login_Types } from "@/types/api_resp";
 import { AxiosResponse } from "axios";
@@ -60,8 +61,22 @@ export default function OTPVerificationPage() {
 
       if (resp.data.is_verified) nav.replace('/')
 
+      disp(toggleToastOpen({
+        data: {
+          toastMessage: 'Verified Successfully',
+          toastOpen: true,
+          toastType: "success"
+        }
+      }))
+
     } catch (e) {
-      console.log('error is E: ', e)
+      disp(toggleToastOpen({
+        data: {
+          toastMessage: 'Unable to Login',
+          toastOpen: true,
+          toastType: "error"
+        }
+      }))
     }
   };
 

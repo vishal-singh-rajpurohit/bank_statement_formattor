@@ -1,14 +1,15 @@
 'use client'
 import React from "react";
 import { Eye, EyeOff, LockKeyhole, Mail } from "lucide-react";
-import {LoginFormErrors, LoginFormValues, loginSchema} from "@/types/auth_inputs"
-import {LoginInput} from "@/components/ui/Inputs"
+import { LoginFormErrors, LoginFormValues, loginSchema } from "@/types/auth_inputs"
+import { LoginInput } from "@/components/ui/Inputs"
 import api from '@/config/api_axios'
 import { useRouter } from "next/navigation";
 import { AxiosResponse } from "axios";
 import { Api_Login_Types } from "@/types/api_resp";
 import { useAppDispatch } from "@/store/Hooks";
-import {enterApp} from "@/store/functions/auth"
+import { enterApp } from "@/store/functions/auth"
+import { toggleToastOpen } from "@/store/functions/ui";
 
 
 export default function LoginPage() {
@@ -43,8 +44,8 @@ export default function LoginPage() {
             setErrors(fieldErrors);
             return;
         }
-        
-        try{
+
+        try {
             const resp: AxiosResponse<Api_Login_Types> = await api.post('/auth/login', result.data, {
                 withCredentials: true
             })
@@ -59,11 +60,25 @@ export default function LoginPage() {
                 }
             }))
 
+            disp(toggleToastOpen({
+                data: {
+                    toastMessage: 'Login Successfully',
+                    toastOpen: true,
+                    toastType: "success"
+                }
+            }))
+
             if (resp.data.is_verified) nav.replace('/')
             else nav.replace('/auth/verify')
-        
-        }catch (e){
-            console.log('error is E: ', e)
+
+        } catch (e) {
+            disp(toggleToastOpen({
+                data: {
+                    toastMessage: 'Unable to Login',
+                    toastOpen: true,
+                    toastType: "error"
+                }
+            }))
         }
     };
 
@@ -109,9 +124,9 @@ export default function LoginPage() {
                     />
 
                     <button
-                            type="submit"
-                            className="h-10 flex gap-1 items-center text-center justify-center cursor-pointer rounded-xl bg-linear-to-r from-blue-600 to-violet-600 py-3.5 text-white font-semibold shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-                        >
+                        type="submit"
+                        className="h-10 flex gap-1 items-center text-center justify-center cursor-pointer rounded-xl bg-linear-to-r from-blue-600 to-violet-600 py-3.5 text-white font-semibold shadow-md transition hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
+                    >
                         Login
                     </button>
                 </form>

@@ -5,11 +5,13 @@ from typing import Dict
 from dotenv import load_dotenv
 import os
 
-from .templates import success_template, fail_template, otp_template
+from .templates import success_template, fail_template, otp_template, message_recived_template
 
 load_dotenv()
 
 resend.api_key = os.getenv("RESENDER_API_KEY")
+
+ADMIN_EMAIL = os.getenv("ADMIN_MAIL_ADDRESS")
 
 def genrate_otp() -> str:
     pass
@@ -61,6 +63,17 @@ async def send_opt_mail(to: str, otp: str):
         "to": [f'{to}'],
         "subject": "Verify Your Email Account",
         "html":  otp_template(otp),
+    }
+    email: resend.Email = resend.Emails.send(params)
+
+    return email
+
+async def send_new_message_mail(user:str, email: str, mobile: str, message: str):
+    params: resend.Emails.SendParams = {
+        "from": "onboarding@resend.dev",
+        "to": [f'{ADMIN_EMAIL}'],
+        "subject": "Verify Your Email Account",
+        "html":  message_recived_template(user, email, mobile, message),
     }
     email: resend.Email = resend.Emails.send(params)
 

@@ -6,6 +6,7 @@ import { store } from '@/store/store'
 import { Header } from "@/components/ui/Header";
 import Footer from "@/components/ui/Footer";
 import { ProfileWrapper } from "@/components/ui/Models";
+import { Toast } from "@/components/ui/Toast";
 
 
 export default function RootLayout({
@@ -20,6 +21,7 @@ export default function RootLayout({
           <body className="">
             <Header />
             <ProfileWrapper />
+            <Toast />
             {children}
             <Footer />
           </body>

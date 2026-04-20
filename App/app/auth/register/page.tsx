@@ -10,6 +10,7 @@ import { useAppDispatch } from '@/store/Hooks';
 import { Api_Login_Types } from '@/types/api_resp';
 import { enterApp } from '@/store/functions/auth';
 import api from '@/config/api_axios';
+import { toggleToastOpen } from '@/store/functions/ui';
 
 
 
@@ -77,7 +78,13 @@ export default function RegisterPage() {
                 else nav.replace('/auth/verify')
 
             } catch (e) {
-                console.log('error is E: ', e)
+                disp(toggleToastOpen({
+                                data: {
+                                    toastMessage: 'Unable to Login',
+                                    toastOpen: true,
+                                    toastType: "error"
+                                }
+                            }))
             }
         },
         [formData]

@@ -6,11 +6,13 @@ import os
 from .db.session import Base, engine
 from .routers.auth import auth_router
 from .routers.actions import actions_router
+from .routers.contact import contact_router
 
 from .models.operations import Operation
 from .models.user import User
 from .models.otps import Otps
 from .models.purchase import Purchase
+from .models.contact import Contact
 
 load_dotenv()
 
@@ -23,6 +25,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
+    # allow_origins=["*"],
     allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
@@ -33,6 +36,7 @@ Base.metadata.create_all(bind=engine)
 
 app.include_router(auth_router, prefix='/api/v1', tags=["Auth"])
 app.include_router(actions_router, prefix='/api/v1', tags=["Actions"])
+app.include_router(contact_router, prefix='/api/v1', tags=["Contact"])
 
 @app.get('/')
 def root():

@@ -4,7 +4,7 @@ from sqlalchemy.sql import func
 from ..db.session import Base
 
 
-class User(Base):
+class User(Base): 
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -37,6 +37,12 @@ class User(Base):
 
     purchases = relationship(
         "Purchase",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    contacts = relationship(
+        "Contact",
         back_populates="user",
         cascade="all, delete-orphan"
     )
