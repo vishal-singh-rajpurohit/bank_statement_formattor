@@ -9,6 +9,7 @@ from ..utils.hash import hash_password, verify_password
 from ..schema.resp import LoginResp
 from ..utils.tokens import decrypt_token
 from ..utils.mail.mail import send_opt_mail
+from ..utils.constants import COOKIE_OPTIONS, ACCESS_TOKEN_EXPIRE_SECONDS, REFRESH_TOKEN_EXPIRE_SECONDS
 from ..models.otps import Otps
 import os
 import random
@@ -57,7 +58,7 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         )
     
     try:
-        new_user = User(name=payload.name, mail=payload.email, password=hash_password(payload.password))
+        new_user = User(name=payload.name, mail=payload.email, password=hash_password(payload.password), credits_token=5)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
@@ -84,8 +85,20 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         user.refresh_token = refresh_token
         db.commit()
 
-        resp.set_cookie('ACCESS_TOKEN', access_token)
-        resp.set_cookie('REFRESH_TOKEN', refresh_token)
+        resp.set_cookie(
+            key='ACCESS_TOKEN',
+            value=access_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite']
+            )
+        resp.set_cookie(
+            key='REFRESH_TOKEN',
+            value=refresh_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite']
+            )
 
         otp = genrate_otp()
 
@@ -109,7 +122,10 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
             message="Verify You Account 🤷‍♂️",
             id=user.id,
             name = user.name,
-            email= user.mail
+            email= user.mail,
+            is_verified = user.is_verified,
+            credits_token=user.credits_token,
+            is_permium_user=user.is_permium_user
         )
         
     except Exception as e:
@@ -181,24 +197,39 @@ async def check_already(req: Request, resp: Response, db:Session = Depends(get_d
     
     db.commit()
 
-    resp.set_cookie('ACCESS_TOKEN', access_token)
-    resp.set_cookie('REFRESH_TOKEN', refresh_token)
+    resp.set_cookie(
+            key='ACCESS_TOKEN',
+            value=access_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite']
+            )
+    resp.set_cookie(
+            key='REFRESH_TOKEN',
+            value=refresh_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite']
+            )
 
     return LoginResp(
         message="Login Success 👍",
         id=user.id,
         name = user.name,
-        email= user.mail
+        email= user.mail,
+        is_verified = user.is_verified,
+        credits_token=user.credits_token,
+        is_permium_user=user.is_permium_user
     )
 
 async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(get_db)):
+
     if not payload.email or not payload.password:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 'message': 'All Data Required'
-            }
-        )
+            })
     
     user = db.query(User).filter(User.mail == payload.email).first()
 
@@ -244,8 +275,26 @@ async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(g
         user.refresh_token = refresh_token
         db.commit()
 
-        resp.set_cookie('ACCESS_TOKEN', access_token)
-        resp.set_cookie('REFRESH_TOKEN', refresh_token)
+        resp.set_cookie(
+            key='ACCESS_TOKEN',
+            value=access_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite'],
+            path='/',
+            max_age=ACCESS_TOKEN_EXPIRE_SECONDS
+            )
+        
+        resp.set_cookie(
+            key='REFRESH_TOKEN',
+            value=refresh_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite'],
+            path='/',
+            max_age=REFRESH_TOKEN_EXPIRE_SECONDS
+            )
+        
     except Exception as e:
         print(f'error: {e}')
         db.rollback()
@@ -254,12 +303,15 @@ async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(g
             detail={
                 'message': 'Database Error'
             })
-    
+
     return LoginResp(
         message="Verify You Account 🤷‍♂️👍",
         id=user.id,
         name = user.name,
-        email= user.mail
+        email= user.mail,
+        is_verified = user.is_verified,
+        credits_token=user.credits_token,
+        is_permium_user=user.is_permium_user
     )
 
 async def verify_account(req: Request, resp: Response, payload: VerificationMode, db:Session = Depends(get_db)):
@@ -309,8 +361,20 @@ async def verify_account(req: Request, resp: Response, payload: VerificationMode
     user.is_verified = True
     db.commit()
 
-    resp.set_cookie('REFRESH_TOKEN', access_token)
-    resp.set_cookie('ACCESS_TOKEN', refresh_token)
+    resp.set_cookie(
+            key='ACCESS_TOKEN',
+            value=access_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite']
+            )
+    resp.set_cookie(
+            key='REFRESH_TOKEN',
+            value=refresh_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite']
+            )
 
     new_otp = db.query(Otps).filter(Otps.user_id == user.id and Otps.otp == payload.otp).delete()
     db.commit()
@@ -319,6 +383,9 @@ async def verify_account(req: Request, resp: Response, payload: VerificationMode
         message="Verified",
         id=user.id,
         name = user.name,
-        email= user.mail
+        email= user.mail,
+        is_verified = user.is_verified,
+        credits_token=user.credits_token,
+        is_permium_user=user.is_permium_user
     )
 

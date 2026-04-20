@@ -241,6 +241,9 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
     # Send the response to the mail
 
     db_user = db.query(User).filter(User.id == user.id).first()
+    db_user.credits_token = db_user.credits_token - 1
+
+    db.commit()
 
     mail_result = await send_mail(
         to= db_user.mail,

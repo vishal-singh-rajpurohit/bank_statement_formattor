@@ -13,6 +13,8 @@ class User(Base):
     password = Column(String(200), nullable=False)
 
     is_verified = Column(Boolean, nullable=False, default=False)
+    is_permium_user = Column(Boolean, nullable=False, default=False)
+    credits_token = Column(Integer, nullable=False, default=0)
 
     refresh_token = Column(String(200), nullable=True, default=" ")
     access_token = Column(String(200), nullable=True, default=" ")
@@ -27,8 +29,14 @@ class User(Base):
     cascade="all, delete-orphan"
     )
 
-    otps = relationship(   # 👈 ADD THIS
+    otps = relationship( 
         "Otps",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
+    purchases = relationship(
+        "Purchase",
         back_populates="user",
         cascade="all, delete-orphan"
     )

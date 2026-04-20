@@ -6,5 +6,9 @@ class LoginResp(BaseModel):
     id: int
     name: str
     email: str
+    is_verified: bool
+    is_permium_user: bool
+    credits_token: int
+
     class Config:
         from_attributes = True
