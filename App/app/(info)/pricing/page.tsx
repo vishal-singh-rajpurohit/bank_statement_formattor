@@ -2,6 +2,7 @@
 import { Coins, Crown } from "lucide-react";
 import {PricingCard} from "@/components/ui/Cards"
 
+
 const pricingPlans = [
   {
     title: "Credit Pack",

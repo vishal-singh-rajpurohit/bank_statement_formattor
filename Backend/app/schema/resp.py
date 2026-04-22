@@ -12,3 +12,22 @@ class LoginResp(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CreateOrderOut(BaseModel):
+    order_db_id: int
+    receipt: str
+    razorpay_order_id: str
+    amount: int
+    currency: str
+    key: str
+
+    class Config:
+        from_attributes = True
+
+
+class VerifyPaymentOut(BaseModel):
+    success: bool
+    message: str
+    class Config:
+        from_attributes = True

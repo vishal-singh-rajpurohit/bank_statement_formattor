@@ -1,6 +1,6 @@
 import { Check } from "lucide-react";
 
-interface PricingCardTypes{
+interface PricingCardTypes {
   plan: {
     title: string;
     price: string;
@@ -19,20 +19,19 @@ export function PricingCard({
 }: PricingCardTypes) {
   const Icon = plan.icon;
 
+
   return (
     <article
-      className={`relative overflow-hidden rounded-2xl border p-6 shadow-lg transition sm:p-8 ${
-        plan.highlight
+      className={`relative overflow-hidden rounded-2xl border p-6 shadow-lg transition sm:p-8 ${plan.highlight
           ? "border-violet-200 bg-linear-to-br from-slate-950 via-slate-900 to-violet-950 text-white shadow-violet-200/40"
           : "border-slate-200 bg-white text-slate-900 shadow-slate-200/70"
-      }`}
+        }`}
     >
       <div
-        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${
-          plan.highlight
+        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ${plan.highlight
             ? "bg-white/10 text-violet-100 ring-1 ring-white/10"
             : "bg-violet-50 text-violet-700 ring-1 ring-violet-100"
-        }`}
+          }`}
       >
         <Icon className="h-4 w-4" />
         {plan.badge}
@@ -54,9 +53,8 @@ export function PricingCard({
         {plan.features.map((feature) => (
           <li key={feature} className="flex items-start gap-3">
             <span
-              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
-                plan.highlight ? "bg-white/10 text-white" : "bg-violet-50 text-violet-700"
-              }`}
+              className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${plan.highlight ? "bg-white/10 text-white" : "bg-violet-50 text-violet-700"
+                }`}
             >
               <Check className="h-4 w-4" />
             </span>
@@ -67,14 +65,13 @@ export function PricingCard({
         ))}
       </ul>
 
-      <button style={{height: '2rem'}}
-        className={`mt-8 cursor-pointer w-full h-10 flex gap-1 items-center text-center justify-center rounded-2xl text-sm font-semibold transition sm:text-base ${
-          plan.highlight
+      <button style={{ height: '2rem' }}
+        className={`mt-8 cursor-pointer w-full h-10 flex gap-1 items-center text-center justify-center rounded-2xl text-sm font-semibold transition sm:text-base ${plan.highlight
             ? "bg-linear-to-r from-blue-600 to-violet-600 text-white"
             : "bg-linear-to-r from-blue-600 to-violet-600 text-white"
-            
-        }`
-    }
+
+          }`
+        }
       >
         {plan.buttonText}
       </button>

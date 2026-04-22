@@ -14,6 +14,7 @@ from .models.user import User
 from .models.otps import Otps
 from .models.purchase import Purchase
 from .models.contact import Contact
+from .models.payment import Order, Payment
 
 load_dotenv()
 
@@ -26,8 +27,8 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["*"],
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"],
+    # allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

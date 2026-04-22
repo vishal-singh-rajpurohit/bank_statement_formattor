@@ -12,7 +12,7 @@ ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
 REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
 
 async def is_loggedin(req: Request, db: Session = Depends(get_db)):
-
+    print('enterd middleware')
     access_token = req.cookies.get("ACCESS_TOKEN")
 
     if not access_token:
@@ -28,4 +28,5 @@ async def is_loggedin(req: Request, db: Session = Depends(get_db)):
         return req.state.user
 
     req.state.user = user
+    print('exit middleware')
     return req.state.user
