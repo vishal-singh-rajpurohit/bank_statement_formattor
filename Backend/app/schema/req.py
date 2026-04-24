@@ -15,7 +15,7 @@ class ContactPayload(BaseModel):
     mobile: str
 
 class PayOrderPayload(BaseModel):
-    ammount: float
+    amount: float
 
 
 class VerifyOrderPayload(BaseModel):

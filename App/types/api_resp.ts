@@ -7,3 +7,12 @@ export interface Api_Login_Types{
     is_permium_user: boolean,
     credits_token: number,
 }
+
+export interface Api_Create_Order{
+    order_id: number;
+    receipt: string;
+    razorpay_order_id: string;
+    amount: number;
+    currency: number;
+    key: string;
+}

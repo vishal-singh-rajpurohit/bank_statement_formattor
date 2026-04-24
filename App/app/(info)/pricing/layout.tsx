@@ -7,7 +7,6 @@ export default function Layout({children}: Readonly<{
     return (
         <>
         {children}
-        <Script src="https://checkout.razorpay.com/v1/checkout.js" />
         </>
     )
 }
