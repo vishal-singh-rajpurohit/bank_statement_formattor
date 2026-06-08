@@ -8,6 +8,7 @@ import {
   FileText,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 
 const features = [
   {
@@ -100,10 +101,12 @@ export function HeroSection() {
           </p>
 
           <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <Link href={'format'} >
             <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-violet-600 px-6 py-4 text-base font-semibold text-white shadow-xl shadow-violet-500/20 transition hover:scale-[1.01] sm:px-7">
               Start Converting Statements
               <ArrowRight className="h-5 w-5" />
             </button>
+            </Link>
             <button className="inline-flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-6 py-4 text-base font-semibold text-slate-900 transition hover:bg-slate-50">
               <Play className="h-5 w-5" />
               Watch Demo

@@ -16,3 +16,26 @@ export interface Api_Create_Order{
     currency: number;
     key: string;
 }
+
+export interface Api_Action_Upload {
+    message: string;
+    operation_id: number;
+    filename: string;
+    temp_name?: string;
+}
+
+export interface Api_Action_Initiate {
+    message: string;
+    operation_id: number;
+    bank_name: string;
+    tally_name: string;
+    voucher_name: string;
+}
+
+export interface Api_Action_Complete {
+    message: string;
+    operation_id: number;
+    bank_name: string;
+    output_file: string;
+    delivery: string;
+}

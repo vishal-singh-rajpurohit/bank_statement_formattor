@@ -49,9 +49,11 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
             detail={'message': 'All Data Required'}
         )
     
+    print('the request')
     existing_user = db.query(User).filter(User.mail == payload.email).first()
     
     if existing_user:
+        print(f"user already {existing_user}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={'message': 'User already existed'}
@@ -111,6 +113,7 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         try:
             await send_opt_mail(user.mail, otp)
         except Exception as e:
+            print(f"error {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail={

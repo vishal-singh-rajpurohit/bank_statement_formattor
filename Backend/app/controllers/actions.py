@@ -1,5 +1,5 @@
 from fastapi import HTTPException, Depends, status, Request, Response, UploadFile
-from pypdf import PdfReader, PdfWriter
+from pypdf import PdfReader
 from  sqlalchemy.orm import Session
 from dotenv import load_dotenv
 from pathlib import Path
@@ -15,6 +15,7 @@ from ..utils.formattors.au_bank import wrapper_convertor
 from ..utils.formattors.kotak import katak_mahindra_formattor
 from ..utils.decrypter import decrpt_pdf
 from ..utils.mail.mail import send_mail, send_mail_error
+from ..utils.constants import COOKIE_OPTIONS
 
 # from ..utils.formattors.au_bank import 
 
@@ -28,6 +29,11 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 
 OUTPUT_DIR = Path("outputs")
 OUTPUT_DIR.mkdir(exist_ok=True)
+
+SUPPORTED_BANKS = {"AU", "KOTAK"}
+
+def safe_upload_filename(filename: str) -> str:
+    return filename.replace("\\", "/").split("/")[-1]
 
 async def upload_pdf(req: Request, resp: Response, file: UploadFile, db: Session = Depends(get_db)):
     
@@ -55,6 +61,15 @@ async def upload_pdf(req: Request, resp: Response, file: UploadFile, db: Session
                 'message': 'File is not pdf'
             })
     
+    safe_filename = safe_upload_filename(file.filename or "statement.pdf")
+
+    if not safe_filename.lower().endswith(".pdf"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                'message': 'File is not pdf'
+            })
+    
     try:
         operation = Operation(
             user_id = user.id
@@ -64,23 +79,34 @@ async def upload_pdf(req: Request, resp: Response, file: UploadFile, db: Session
         db.commit()
         db.refresh(operation)
 
-        file_path = f"uploads/id-{operation.id}-{file.filename}"
+        temp_name = f"id-{operation.id}-{safe_filename}"
+        file_path = UPLOAD_DIR / temp_name
 
         # Save file to disk
         with open(file_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        operation.temp_name = f"id-{operation.id}-{file.filename}"
+        operation.temp_name = temp_name
+        operation.pdf = str(file_path)
 
         db.commit()
 
         session_token = genrate_session_token(SessionPayload(id=operation.id))
 
-        resp.set_cookie('SESSION_TOKEN', session_token)
+        resp.set_cookie(
+            key='SESSION_TOKEN',
+            value=session_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite'],
+            path='/'
+        )
 
         return {
             "message": "Uploaded",
-            "filename": file.filename
+            "operation_id": operation.id,
+            "filename": safe_filename,
+            "temp_name": operation.temp_name
             }
     except Exception as e:
         db.rollback()
@@ -90,7 +116,6 @@ async def upload_pdf(req: Request, resp: Response, file: UploadFile, db: Session
                 'message': 'Error in file uploading'
             }
         )
-
 
 async def initiate_action(req: Request, resp: Response, payload: ActionPayload, db: Session = Depends(get_db)):
     user = req.state.user
@@ -130,31 +155,74 @@ async def initiate_action(req: Request, resp: Response, payload: ActionPayload, 
                 'message': 'Document not found in DB'
             })
     
-    if not payload.bank_name or not payload.tally_name or not payload.voucher_name:
+    bank_name = payload.bank_name.strip().upper()
+    tally_name = payload.tally_name.strip()
+    voucher_name = payload.voucher_name.strip()
+    password = payload.password.strip() if payload.password else ""
+
+    if not bank_name or not tally_name or not voucher_name:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 'message': 'All Data Required'
             })
     
+    if bank_name not in SUPPORTED_BANKS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                'message': 'Unsupported bank'
+            })
+    
+    if "/" in voucher_name or "\\" in voucher_name or ".." in voucher_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                'message': 'Ledger/output name cannot contain path characters'
+            })
+    
     reader = PdfReader(f'{UPLOAD_DIR}/{document.temp_name}')
     
     if reader.is_encrypted:
-        decrpt_pdf(f'{UPLOAD_DIR}/{document.temp_name}', payload.password)
+        if not password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    'message': 'Password is required for encrypted pdf'
+                })
+        try:
+            decrpt_pdf(f'{UPLOAD_DIR}/{document.temp_name}', password)
+        except Exception:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    'message': 'Unable to decrypt pdf with provided password'
+                })
         
     
     try:
-        document.file_name = payload.voucher_name
-        document.bank = payload.bank_name
+        document.file_name = voucher_name
+        document.bank = bank_name
         db.commit()
 
         session_token = genrate_session_token(SessionPayload(id=document.id))
 
-        resp.set_cookie('SESSION_TOKEN', session_token)
+        resp.set_cookie(
+            key='SESSION_TOKEN',
+            value=session_token,
+            httponly=COOKIE_OPTIONS['httponly'],
+            secure=COOKIE_OPTIONS['secure'],
+            samesite=COOKIE_OPTIONS['samesite'],
+            path='/'
+        )
 
         return {
-        'message': 'The Data Recived now Ready for action'
-    }
+            'message': 'The Data Recived now Ready for action',
+            'operation_id': document.id,
+            'bank_name': document.bank,
+            'tally_name': tally_name,
+            'voucher_name': voucher_name
+        }
 
     except:
         db.rollback()
@@ -164,7 +232,6 @@ async def initiate_action(req: Request, resp: Response, payload: ActionPayload, 
                 'message': 'cannot store to database'
             })
     
-
 async def complete_action(req: Request, resp: Response, db: Session = Depends(get_db)):
     user = req.state.user
 
@@ -202,7 +269,6 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
                 'message': 'Document not found in DB'
             })
     
-
     file_path = f"uploads/{document.temp_name}"
     xlsx_path = f'{OUTPUT_DIR}/id-{document.id}.xlsx'
     xml_path = f'{OUTPUT_DIR}/{document.file_name}.xml'
@@ -213,6 +279,8 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
             excel_path= xlsx_path,
             party_ledger_name=document.file_name
         )
+        document.xlsx = xlsx_path
+        document.xml_tally = xml_path
 
     elif document.bank == "KOTAK":
         katak_mahindra_formattor(
@@ -220,15 +288,16 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
             ledger_name=f'{document.file_name}',
             output_path= f'{xml_path}'
         )
+        document.xml_tally = xml_path
      
     else:
         db_user = db.query(User).filter(User.id == user.id).first()
         
-        mail_result = await send_mail_error(
+        await send_mail_error(
             to=db_user.mail,
             sub='We are Facing Some Proble While Processing Your Statement',
             bank_name=document.bank,
-            xml_path=document.file_name
+            file_name=document.file_name
         )
         
         raise HTTPException(
@@ -254,8 +323,10 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
         file_name=document.file_name
     )
 
-    print('mail result: ', mail_result)
-
     return {
-        'message': 'The Response sent to the Mail'
+        'message': 'The Response sent to the Mail',
+        'operation_id': document.id,
+        'bank_name': document.bank,
+        'output_file': f'{document.file_name}.xml',
+        'delivery': 'email'
     }
