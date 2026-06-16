@@ -37,7 +37,7 @@ function AboutCard({
     title: string;
     description: string;
   };
-}) {
+}) { 
   const Icon = item.icon;
 
   return (
@@ -72,10 +72,12 @@ export default function Pageg() {
               </p>
 
               <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+                <Link href={'/format'} >
                 <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-linear-to-r from-blue-600 to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-md transition hover:scale-[1.02] hover:shadow-lg sm:text-base">
                   Get Started
                   <ArrowRight className="h-5 w-5" />
                 </button>
+                </Link>
                 <Link href={'/contact'} >
                   <button className="inline-flex items-center justify-center rounded-2xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-800 transition hover:bg-slate-50 sm:text-base">
                     Contact Us

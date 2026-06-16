@@ -221,10 +221,12 @@ export function CTASection() {
             </div>
 
             <div className="flex flex-col gap-4 lg:items-end">
+              <Link href={'/format'}>
               <button className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-6 py-4 text-base font-semibold text-slate-950 transition hover:scale-[1.02]">
                 Request Demo
                 <ArrowRight className="h-5 w-5" />
               </button>
+              </Link>
               <button className="inline-flex items-center justify-center rounded-2xl border border-white/15 bg-white/5 px-6 py-4 text-base font-semibold text-white backdrop-blur transition hover:bg-white/10">
                 See Pricing
               </button>

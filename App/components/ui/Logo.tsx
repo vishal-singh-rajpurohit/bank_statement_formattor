@@ -5,7 +5,7 @@ import Image from "next/image";
 
 export function Logo() {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 cursor-pointer">
       <div className="flex items-center justify-center rounded-2xl ">
         <Image src={logo} alt="logo of image" className=" h-8 w-10"/>
       </div>

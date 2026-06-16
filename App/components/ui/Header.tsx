@@ -29,7 +29,7 @@ const SignUpButton = () => {
   )
 }
 
-const ProfileButton = ({open}: {open(): void}) => {
+const ProfileButton = ({ open }: { open(): void }) => {
   return (
     <button onClick={open} className="rounded-2xl w-10 h-10 flex justify-center items-center cursor-pointer  bg-linear-to-r from-blue-600 to-violet-600  text-base font-semibold text-white shadow-lg shadow-violet-500/20 transition hover:scale-[1.02]">
       <CircleUserRound size={25} />
@@ -42,14 +42,16 @@ export function Header() {
   const [open, setOpen] = React.useState(false);
   const is_loggedIn = useAppSelector(state => state.auth.email)
 
-  function openProfile(){
+  function openProfile() {
     disp(toggleProfile())
   }
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/90 backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-        <Logo />
+        <Link href={'/'}>
+          <Logo  />
+        </Link>
 
         <nav className="hidden items-center gap-10 lg:flex">
           {navItems.map((item) => (
@@ -105,12 +107,16 @@ export function Header() {
               </a>
             ))}
             <div className="mt-3 grid grid-cols-2 gap-3">
-              <button className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-800">
-                Sign In
-              </button>
-              <button className="rounded-xl bg-linear-to-r from-blue-600 to-violet-600 px-4 py-3 text-sm font-semibold text-white">
-                Sign Up
-              </button>
+              <Link href={'/auth/login'} >
+                <button className="rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-800">
+                  Sign In
+                </button>
+              </Link>
+              <Link href={'/auth/register'} >
+                <button className="rounded-xl bg-linear-to-r from-blue-600 to-violet-600 px-4 py-3 text-sm font-semibold text-white">
+                  Sign Up
+                </button>
+              </Link>
             </div>
           </div>
         </div>
