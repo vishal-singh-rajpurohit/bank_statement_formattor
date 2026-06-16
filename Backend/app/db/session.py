@@ -1,13 +1,9 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
-from dotenv import load_dotenv
-import os
+from ..settings import settings
 
-load_dotenv()
+DB_URI = settings.PGQL_URL
 
-DB_URI = os.getenv('PGQL_URL')
-
-# print('PGQL_URL: ', DB_URI)
 
 engine = create_engine(DB_URI)
 

@@ -44,7 +44,7 @@ async def send_message(req: Request, payload: ContactPayload , db: Session = Dep
         db.refresh(new_message)
 
 
-        await send_new_message_mail(user.name, user.mail, new_message.mobile, new_message.message)
+        await send_new_message_mail(user.name, user.email, new_message.mobile, new_message.message)
 
         return {
             'message': '👍👍👍👍'

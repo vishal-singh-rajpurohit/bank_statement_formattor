@@ -1,7 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from dotenv import load_dotenv
-import os
 
 from .db.session import Base, engine
 from .routers.auth import auth_router
@@ -14,20 +12,18 @@ from .models.otps import Otps
 from .models.purchase import Purchase
 from .models.contact import Contact
 from .models.payment import Order, Payment
+from .settings import settings
 
-load_dotenv()
 
 origins = [
-    os.getenv("CORS_ORIGIN"),
-    os.getenv("CORS_ORIGIN_"),
+    settings.CORS_ORIGIN,
 ]
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # allow_origins=["*"],
-    allow_origins=["http://localhost:3000"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,15 +1,12 @@
-from fastapi import Request, HTTPException, status, Depends
+from fastapi import Request, Depends
 from sqlalchemy.orm import Session
 from ..db.session import get_db
 from ..models.user import User
 from ..utils.tokens import decrypt_token
-import os
-from dotenv import load_dotenv
+from ..settings import settings
 
-load_dotenv()
-
-ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
-REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
+ACCESS_TOKEN_SECRET = settings.ACCESS_TOKEN_SECRET
+REFRESH_TOKEN_SECRET = settings.REFRESH_TOKEN_SECRET
 
 async def is_loggedin(req: Request, db: Session = Depends(get_db)):
     access_token = req.cookies.get("ACCESS_TOKEN")

@@ -1,13 +1,11 @@
 import jwt
 import datetime
-import os
-from dotenv import load_dotenv
 from pydantic import BaseModel
 from fastapi import status, HTTPException
+from ..settings import settings
 
-load_dotenv()
 
-SESSION_SECRET = os.getenv("SESSION_SECRET")
+SESSION_SECRET = settings.SESSION_SECRET
 
 class TokenPayload(BaseModel):
     id: int
@@ -17,7 +15,7 @@ class SessionPayload(BaseModel):
     id: int
 
 
-ALGO = os.getenv("ALGO")
+ALGO = settings.ALGO
 
 def genrate_token(paylod:TokenPayload, secret_key:str, expiry: str = "30")->str:
     data = {

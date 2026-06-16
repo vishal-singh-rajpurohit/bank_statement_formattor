@@ -1,11 +1,10 @@
 from fastapi import Depends, HTTPException, status, Request, Header
 from uuid import uuid4
-import json
 import hmac
 import hashlib
-import os
-from dotenv import load_dotenv
 from sqlalchemy.orm import Session
+
+
 from ..db.session import get_db
 from ..models.user import User
 from ..models.purchase import Purchase
@@ -17,7 +16,8 @@ from ..schema.resp import CreateOrderOut, VerifyPaymentOut
 from ..utils.pay import client
 from ..utils.hash import verify_webhook_signature
 
-load_dotenv()
+from ..settings import settings
+
 
 async def create_payment_order(req: Request, payload: PayOrderPayload, db:Session = Depends(get_db)):
 
@@ -71,7 +71,7 @@ async def create_payment_order(req: Request, payload: PayOrderPayload, db:Sessio
         order_db_id=str(db_order.id),
         receipt=receipt_id,
         razorpay_order_id=order["id"],
-        key=os.getenv("RAZORPAY_KEY_ID"),
+        key=settings.RAZORPAY_KEY_ID,
         amount=order["amount"],
         currency=order["currency"],
         status=order["status"]
@@ -101,7 +101,7 @@ async def verify_payment(
             detail={"message": "order_id, payment_id and signature are required"}
         )
 
-    secret = os.getenv("RAZORPAY_KEY_SECRET")
+    secret = settings.RAZORPAY_KEY_SECRET
     if not secret:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

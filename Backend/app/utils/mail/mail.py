@@ -1,17 +1,14 @@
 import resend
-import random
 import base64
 from typing import Dict
-from dotenv import load_dotenv
-import os
 
+from ...settings import settings
 from .templates import success_template, fail_template, otp_template, message_recived_template
 
-load_dotenv()
 
-resend.api_key = os.getenv("RESENDER_API_KEY")
+resend.api_key = settings.RESENDER_API_KEY
 
-ADMIN_EMAIL = os.getenv("ADMIN_MAIL_ADDRESS")
+ADMIN_EMAIL = settings.ADMIN_MAIL_ADDRESS
 
 def genrate_otp() -> str:
     pass

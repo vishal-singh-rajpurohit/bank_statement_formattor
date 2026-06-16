@@ -1,5 +1,6 @@
 from fastapi import APIRouter, status, Request, Depends, Response
 from sqlalchemy.orm import Session
+from ..settings import settings
 from ..schema.user import CreateUser, LoginUserSchema
 from ..db.session import get_db
 from typing import Annotated
@@ -8,15 +9,11 @@ from ..schema.req import VerificationMode
 from ..controllers.auth import register_user, login, logout, check_already, verify_account
 from ..middleware.auth_middleware import is_loggedin
 
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 auth_router = APIRouter(prefix='/auth')
 
-ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
-REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
+ACCESS_TOKEN_SECRET = settings.ACCESS_TOKEN_SECRET
+REFRESH_TOKEN_SECRET = settings.REFRESH_TOKEN_SECRET
 
 db_depandency = Annotated[Session, Depends(get_db)]
 

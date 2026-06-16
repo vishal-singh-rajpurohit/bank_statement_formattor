@@ -11,15 +11,15 @@ from ..utils.tokens import decrypt_token
 from ..utils.mail.mail import send_opt_mail
 from ..utils.constants import COOKIE_OPTIONS, ACCESS_TOKEN_EXPIRE_SECONDS, REFRESH_TOKEN_EXPIRE_SECONDS
 from ..models.otps import Otps
-import os
+from ..settings import settings
+
 import random
-from dotenv import load_dotenv
 
 
-load_dotenv()
 
-ACCESS_TOKEN_SECRET = os.getenv("ACCESS_TOKEN_SECRET")
-REFRESH_TOKEN_SECRET = os.getenv("REFRESH_TOKEN_SECRET")
+
+ACCESS_TOKEN_SECRET = settings.ACCESS_TOKEN_SECRET
+REFRESH_TOKEN_SECRET = settings.REFRESH_TOKEN_SECRET
 
 
 def genrate_otp() -> int:
@@ -50,7 +50,7 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         )
     
     print('the request')
-    existing_user = db.query(User).filter(User.mail == payload.email).first()
+    existing_user = db.query(User).filter(User.email == payload.email).first()
     
     if existing_user:
         print(f"user already {existing_user}")
@@ -60,14 +60,14 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         )
     
     try:
-        new_user = User(name=payload.name, mail=payload.email, password=hash_password(payload.password), credits_token=5)
+        new_user = User(name=payload.name, email=payload.email, password=hash_password(payload.password), credits_token=5)
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
-        refresh_token = genrate_token(TokenPayload(id=new_user.id, email=new_user.mail), secret_key=REFRESH_TOKEN_SECRET)
+        refresh_token = genrate_token(TokenPayload(id=new_user.id, email=new_user.email), secret_key=REFRESH_TOKEN_SECRET)
 
-        access_token = genrate_token(TokenPayload(id=new_user.id, email=new_user.mail), secret_key=ACCESS_TOKEN_SECRET)
+        access_token = genrate_token(TokenPayload(id=new_user.id, email=new_user.email), secret_key=ACCESS_TOKEN_SECRET)
 
         if not refresh_token or not access_token:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,  detail={
@@ -111,7 +111,7 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
         db.refresh(db_opt)
 
         try:
-            await send_opt_mail(user.mail, otp)
+            await send_opt_mail(user.email, otp)
         except Exception as e:
             print(f"error {e}")
             raise HTTPException(
@@ -125,7 +125,7 @@ async def register_user( req: Request, resp: Response, payload: CreateUser, db: 
             message="Verify You Account 🤷‍♂️",
             id=user.id,
             name = user.name,
-            email= user.mail,
+            email= user.email,
             is_verified = user.is_verified,
             credits_token=user.credits_token,
             is_permium_user=user.is_permium_user
@@ -178,8 +178,8 @@ async def check_already(req: Request, resp: Response, db:Session = Depends(get_d
                 'message': 'Unautharized Acccess'
             })
 
-    access_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.mail), ACCESS_TOKEN_SECRET)
-    refresh_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.mail), REFRESH_TOKEN_SECRET)
+    access_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.email), ACCESS_TOKEN_SECRET)
+    refresh_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.email), REFRESH_TOKEN_SECRET)
 
     if not refresh_token or not access_token:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,  detail={
@@ -219,7 +219,7 @@ async def check_already(req: Request, resp: Response, db:Session = Depends(get_d
         message="Login Success 👍",
         id=user.id,
         name = user.name,
-        email= user.mail,
+        email= user.email,
         is_verified = user.is_verified,
         credits_token=user.credits_token,
         is_permium_user=user.is_permium_user
@@ -234,7 +234,7 @@ async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(g
                 'message': 'All Data Required'
             })
     
-    user = db.query(User).filter(User.mail == payload.email).first()
+    user = db.query(User).filter(User.email == payload.email).first()
 
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,  detail={
@@ -257,7 +257,7 @@ async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(g
         db.refresh(db_opt)
 
         try:
-            await send_opt_mail(user.mail, otp)
+            await send_opt_mail(user.email, otp)
         except Exception as e:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -266,8 +266,8 @@ async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(g
                 })
 
     try:
-        access_token = genrate_token(TokenPayload(id=user.id, email=user.mail), ACCESS_TOKEN_SECRET)
-        refresh_token = genrate_token(TokenPayload(id=user.id, email=user.mail), REFRESH_TOKEN_SECRET)
+        access_token = genrate_token(TokenPayload(id=user.id, email=user.email), ACCESS_TOKEN_SECRET)
+        refresh_token = genrate_token(TokenPayload(id=user.id, email=user.email), REFRESH_TOKEN_SECRET)
 
         if not refresh_token or not access_token:
                 raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,  detail={
@@ -311,7 +311,7 @@ async def login(resp: Response, payload: LoginUserSchema, db:Session = Depends(g
         message="Verify You Account 🤷‍♂️👍",
         id=user.id,
         name = user.name,
-        email= user.mail,
+        email= user.email,
         is_verified = user.is_verified,
         credits_token=user.credits_token,
         is_permium_user=user.is_permium_user
@@ -334,8 +334,8 @@ async def verify_account(req: Request, resp: Response, payload: VerificationMode
                 'message': 'Muts Provide Otp'
             })
 
-    access_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.mail), ACCESS_TOKEN_SECRET)
-    refresh_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.mail), REFRESH_TOKEN_SECRET)
+    access_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.email), ACCESS_TOKEN_SECRET)
+    refresh_token = genrate_token(TokenPayload(id=auth_user.id, email=auth_user.email), REFRESH_TOKEN_SECRET)
 
     if not refresh_token or not access_token:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,  detail={
@@ -386,7 +386,7 @@ async def verify_account(req: Request, resp: Response, payload: VerificationMode
         message="Verified",
         id=user.id,
         name = user.name,
-        email= user.mail,
+        email= user.email,
         is_verified = user.is_verified,
         credits_token=user.credits_token,
         is_permium_user=user.is_permium_user

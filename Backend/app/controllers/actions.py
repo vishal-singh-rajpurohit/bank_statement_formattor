@@ -1,10 +1,8 @@
 from fastapi import HTTPException, Depends, status, Request, Response, UploadFile
 from pypdf import PdfReader
 from  sqlalchemy.orm import Session
-from dotenv import load_dotenv
 from pathlib import Path
 import shutil
-import os
 
 from ..schema.req import ActionPayload
 from ..models.operations import Operation
@@ -16,12 +14,11 @@ from ..utils.formattors.kotak import katak_mahindra_formattor
 from ..utils.decrypter import decrpt_pdf
 from ..utils.mail.mail import send_mail, send_mail_error
 from ..utils.constants import COOKIE_OPTIONS
+from ..settings import settings
 
-# from ..utils.formattors.au_bank import 
 
-load_dotenv()
 
-SESSION_SECRET = os.getenv("SESSION_SECRET")
+SESSION_SECRET = settings.SESSION_SECRET
 
 
 UPLOAD_DIR = Path("uploads")
@@ -294,7 +291,7 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
         db_user = db.query(User).filter(User.id == user.id).first()
         
         await send_mail_error(
-            to=db_user.mail,
+            to=db_user.email,
             sub='We are Facing Some Proble While Processing Your Statement',
             bank_name=document.bank,
             file_name=document.file_name
@@ -314,8 +311,8 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
 
     db.commit()
 
-    mail_result = await send_mail(
-        to= db_user.mail,
+    await send_mail(
+        to= db_user.email,
         sub="Your File is Ready sir",
         username= db_user.name,
         bank_name=document.bank,
