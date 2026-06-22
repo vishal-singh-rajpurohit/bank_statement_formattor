@@ -1,38 +1,48 @@
-# version: "3.9"
-
-networks:
-  statement_network:
-    driver: bridge
-
 services:
   db:
     image: postgres:16-alpine
-    container_name: postgres_db
-    ports:
-      - "5432:5432"
-    environment:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DB}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - statement_network
+    container_name: bank2xml-postgres-db
+
     restart: unless-stopped
 
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    expose:
+      - "5432"
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+    networks:
+      - bank2xml
+
+
   backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: vishalrajpurohit/bank2xml-backend:1.2
+    container_name: bank2xml-backend
 
-    container_name: statement_server
+    restart: unless-stopped
 
-    ports:
-      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
 
     environment:
-      CORS_ORIGIN: ${CORS_ORIGIN}
+
       PGQL_URL: ${PGQL_URL}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+      CORS_ORIGIN_2: ${CORS_ORIGIN_2}
+      CORS_ORIGIN_3: ${CORS_ORIGIN_3}
+      CORS_ORIGIN_4: ${CORS_ORIGIN_4}
 
       ACCESS_TOKEN_SECRET: ${ACCESS_TOKEN_SECRET}
       ACCESS_TOKEN_EXPIRY: ${ACCESS_TOKEN_EXPIRY}
@@ -42,50 +52,66 @@ services:
 
       ALGO: ${ALGO}
 
-      RESENDER_API_KEY: ${RESENDER_API_KEY}
-
       SESSION_SECRET: ${SESSION_SECRET}
+
+      RESENDER_API_KEY: ${RESENDER_API_KEY}
+      RESENDER_DOMAIN: ${RESENDER_DOMAIN}
 
       ADMIN_MAIL_ADDRESS: ${ADMIN_MAIL_ADDRESS}
 
       RAZORPAY_KEY_ID: ${RAZORPAY_KEY_ID}
       RAZORPAY_KEY_SECRET: ${RAZORPAY_KEY_SECRET}
       RAZORPAY_WEBHOOK_SECRET: ${RAZORPAY_WEBHOOK_SECRET}
-    
-    depends_on:
-      - db
+
+    expose:
+      - "8000"
 
     networks:
-      - statement_network
-    
-    restart: unless-stopped
+      - bank2xml
+
 
   frontend:
-    build:
-      context: ./app
-      dockerfile: Dockerfile
+    image: vishalrajpurohit/bank2xml-frontend:1.3
+    container_name: bank2xml-frontend
 
-      args:
-        NEXT_PUBLIC_API_URI: ${NEXT_PUBLIC_API_URI}      # match .env key exactly
-        NEXT_PUBLIC_RAZORPAY_KEY_ID: ${NEXT_PUBLIC_RAZORPAY_KEY_ID}
-
-    container_name: statement_client
-
-
-    ports:
-      - "3000:3000"
-
-    environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URI}
-      NEXT_PUBLIC_RAZORPAY_KEY_ID: ${NEXT_PUBLIC_RAZORPAY_KEY_ID}
+    restart: unless-stopped
 
     depends_on:
       - backend
 
+    expose:
+      - "3000"
+
     networks:
-      - statement_network
+      - bank2xml
+
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: bank2xml-nginx
 
     restart: unless-stopped
 
+    depends_on:
+      - frontend
+      - backend
+
+    ports:
+      - "80:80"
+      - "443:443"
+
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      # - ./certbot/www:/var/www/certbot
+      # - /etc/letsencrypt:/etc/letsencrypt:ro
+
+    networks:
+      - bank2xml
+
+
 volumes:
-    postgres_data:
+  postgres_data:
+
+
+networks:
+  bank2xml:

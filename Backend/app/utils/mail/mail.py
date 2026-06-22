@@ -22,7 +22,7 @@ async def send_mail(to:str, sub: str, username: str, bank_name: str, xml_path: s
     xml_file = encode_file(xml_path)
 
     params: resend.Emails.SendParams = {
-        "from": "onboarding@resend.dev",
+        "from": settings.RESENDER_DOMAIN,
         "to": [f'{to}'],
         "subject": f'{sub}',
         "html":  success_template(username, bank_name, file_name) ,
@@ -42,7 +42,7 @@ async def send_mail_error(to:str, sub: str, bank_name: str,  file_name: str) -> 
 
 
     params: resend.Emails.SendParams = {
-        "from": "onboarding@resend.dev",
+        "from": settings.RESENDER_DOMAIN,
         "to": [f'{to}'],
         "subject": f'{sub}',
         "html":  fail_template(file_name, bank_name),
@@ -56,7 +56,7 @@ async def send_mail_error(to:str, sub: str, bank_name: str,  file_name: str) -> 
 async def send_opt_mail(to: str, otp: str):
 
     params: resend.Emails.SendParams = {
-        "from": "onboarding@resend.dev",
+        "from": settings.RESENDER_DOMAIN,
         "to": [f'{to}'],
         "subject": "Verify Your Email Account",
         "html":  otp_template(otp),
@@ -67,7 +67,7 @@ async def send_opt_mail(to: str, otp: str):
 
 async def send_new_message_mail(user:str, email: str, mobile: str, message: str):
     params: resend.Emails.SendParams = {
-        "from": "onboarding@resend.dev",
+        "from": settings.RESENDER_DOMAIN,
         "to": [f'{ADMIN_EMAIL}'],
         "subject": "Verify Your Email Account",
         "html":  message_recived_template(user, email, mobile, message),

@@ -17,6 +17,9 @@ from .settings import settings
 
 origins = [
     settings.CORS_ORIGIN,
+    settings.CORS_ORIGIN_2,
+    settings.CORS_ORIGIN_3,
+    settings.CORS_ORIGIN_4,
 ]
 
 app = FastAPI()

@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     APP_NAME: str = "Statement Formatter"
 
     CORS_ORIGIN: str
+    CORS_ORIGIN_2: str
+    CORS_ORIGIN_3: str
+    CORS_ORIGIN_4: str
 
     PGQL_URL: str
 
@@ -26,6 +29,7 @@ class Settings(BaseSettings):
     ALGO: str
 
     RESENDER_API_KEY: str
+    RESENDER_DOMAIN: str
 
     SESSION_SECRET: str
 
