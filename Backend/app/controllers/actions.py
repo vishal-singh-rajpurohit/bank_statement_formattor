@@ -9,8 +9,7 @@ from ..models.operations import Operation
 from ..models.user import User
 from ..db.session import get_db
 from ..utils.tokens import genrate_session_token, SessionPayload, decrypt_token
-from ..utils.formattors.au_bank import wrapper_convertor
-from ..utils.formattors.kotak import katak_mahindra_formattor
+from ..utils.genaric import task_wrapper
 from ..utils.decrypter import decrpt_pdf
 from ..utils.mail.mail import send_mail, send_mail_error
 from ..utils.constants import COOKIE_OPTIONS
@@ -42,6 +41,7 @@ async def upload_pdf(req: Request, resp: Response, file: UploadFile, db: Session
             SET COOKIES 👍👍👍
             RESP 👍👍👍
     """
+    
     user = req.state.user
 
     if user == None:
@@ -266,28 +266,16 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
                 'message': 'Document not found in DB'
             })
     
-    file_path = f"uploads/{document.temp_name}"
-    xlsx_path = f'{OUTPUT_DIR}/id-{document.id}.xlsx'
-    xml_path = f'{OUTPUT_DIR}/{document.file_name}.xml'
+    file_path = str((UPLOAD_DIR / document.temp_name).resolve())
+    xlsx_path = str((OUTPUT_DIR / f'id-{document.id}.xlsx').resolve())
+    xml_path = str((OUTPUT_DIR / f'{document.file_name}.xml').resolve())
 
-    if document.bank == "AU": 
-        wrapper_convertor(
-            file_name=file_path,
-            excel_path= xlsx_path,
-            party_ledger_name=document.file_name
-        )
-        document.xlsx = xlsx_path
-        document.xml_tally = xml_path
+    document.xlsx = xlsx_path
+    document.xml_tally = xml_path
 
-    elif document.bank == "KOTAK":
-        katak_mahindra_formattor(
-            path = f'{file_path}',
-            ledger_name=f'{document.file_name}',
-            output_path= f'{xml_path}'
-        )
-        document.xml_tally = xml_path
-     
-    else:
+    print("reached here: ", document.bank)
+ 
+    if document.bank != "AU" and document.bank != "KOTAK":
         db_user = db.query(User).filter(User.id == user.id).first()
         
         await send_mail_error(
@@ -307,21 +295,25 @@ async def complete_action(req: Request, resp: Response, db: Session = Depends(ge
     # Send the response to the mail
 
     db_user = db.query(User).filter(User.id == user.id).first()
+
+    task_wrapper.delay(data = {
+        'file_path': file_path,
+        'xlsx_path': xlsx_path,
+        'xml_path': xml_path,
+        'file_name': document.file_name,
+        'bank': document.bank,
+        'db_user_name': db_user.name,
+        'db_user_email': db_user.email,
+    })
+    
     db_user.credits_token = db_user.credits_token - 1
 
     db.commit()
 
-    await send_mail(
-        to= db_user.email,
-        sub="Your File is Ready sir",
-        username= db_user.name,
-        bank_name=document.bank,
-        xml_path=f'{xml_path}',
-        file_name=document.file_name
-    )
+    print("reached here")
 
     return {
-        'message': 'The Response sent to the Mail',
+        'message': 'The Response will be sent to your Email',
         'operation_id': document.id,
         'bank_name': document.bank,
         'output_file': f'{document.file_name}.xml',

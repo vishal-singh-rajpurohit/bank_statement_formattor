@@ -3,6 +3,8 @@ from xml.etree.ElementTree import Element, SubElement, ElementTree
 import pdfplumber
 from datetime import datetime
 
+from ...tasks.celery import celery_app
+
 def zero_page(page):
      header = ['Date', 'Narration', ' Chq/Ref No', 'Withdrawal(Dr)/Deposit(Cr)', 'Balance']
 
@@ -208,6 +210,7 @@ def create_tally_xml(df: pd.DataFrame, party_ledger_name: str, output_file="outp
 
     print(f"✅ XML Generated: {output_file}")
 
+# @celery_app.task
 def katak_mahindra_formattor(path: str, ledger_name: str, output_path: str):
 
     df = process_pdf(path)

@@ -5,6 +5,7 @@ from typing import Dict
 from ...settings import settings
 from .templates import success_template, fail_template, otp_template, message_recived_template
 
+from ...tasks.celery import celery_app
 
 resend.api_key = settings.RESENDER_API_KEY
 
@@ -17,7 +18,8 @@ def encode_file(file_path: str):
     with open(file_path, "rb") as f:
         return base64.b64encode(f.read()).decode("utf-8")
 
-async def send_mail(to:str, sub: str, username: str, bank_name: str, xml_path: str, file_name: str) -> Dict:
+@celery_app.task
+def send_mail(to:str, sub: str, username: str, bank_name: str, xml_path: str, file_name: str) -> Dict:
 
     xml_file = encode_file(xml_path)
 
@@ -37,10 +39,7 @@ async def send_mail(to:str, sub: str, username: str, bank_name: str, xml_path: s
 
     return email
 
-
 async def send_mail_error(to:str, sub: str, bank_name: str,  file_name: str) -> Dict:
-
-
     params: resend.Emails.SendParams = {
         "from": settings.RESENDER_DOMAIN,
         "to": [f'{to}'],
@@ -51,7 +50,6 @@ async def send_mail_error(to:str, sub: str, bank_name: str,  file_name: str) -> 
     email: resend.Email = resend.Emails.send(params)
 
     return email
-
 
 async def send_opt_mail(to: str, otp: str):
 

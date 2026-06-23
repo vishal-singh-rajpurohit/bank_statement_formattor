@@ -2,7 +2,7 @@ import pandas as pd
 import xml.etree.ElementTree as ET
 import pdfplumber
 from ..converter import convert_to_xlsx
-
+from ...tasks.celery import celery_app
 
 def to_page_zero(pdf):
     page = pdf.pages[0]
@@ -175,6 +175,7 @@ def convert_excel_to_tally_xml(file_path, party_ledger_name, output_file="output
 
     print(f"✅ XML Generated: {output_file}")
 
+# @celery_app.task
 def wrapper_convertor(file_name: str, excel_path: str, party_ledger_name: str):
     frame = au_processor(file_name)
     xlsx_apath = convert_to_xlsx(frame, excel_path, 'sheet1')
